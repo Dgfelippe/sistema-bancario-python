@@ -6,21 +6,7 @@
 """
 
 # ─────────────────────────────────────────
-#  PASSO 1: Variáveis de estado da conta
-#  (a "memória" do nosso banco enquanto
-#   o programa está rodando)
-# ─────────────────────────────────────────
-
-saldo = 0               # quanto tem na conta
-limite = 500            # limite máximo por saque
-extrato = ""            # histórico de movimentações
-numero_saques = 0       # quantos saques foram feitos
-LIMITE_SAQUES = 3       # máximo de saques permitidos por dia
-
-
-# ─────────────────────────────────────────
-#  PASSO 2: Funções visuais (deixam o
-#  terminal bonito e organizado)
+#  Funções visuais
 # ─────────────────────────────────────────
 
 def cabecalho():
@@ -40,30 +26,23 @@ def exibir_menu():
     print("  [d] 💰  Depositar")
     print("  [s] 💸  Sacar")
     print("  [e] 📄  Ver Extrato")
+    print("  [u] 👤  Novo Usuário")
+    print("  [c] 🏦  Nova Conta")
+    print("  [l] 📋  Listar Contas")
     print("  [q] 🚪  Sair")
     separador()
     return input("  👉 Escolha uma opção: ").strip().lower()
 
 
 # ─────────────────────────────────────────
-#  PASSO 3: Funções de operação bancária
-#  (cada uma resolve um problema pequeno)
+#  Funções de operação bancária
 # ─────────────────────────────────────────
 
-def depositar(nome, saldo, extrato):
+def depositar(saldo, valor, extrato, /):
     """
-    Recebe o nome, saldo e extrato atuais.
-    Valida e processa um depósito.
+    Recebe saldo, valor e extrato apenas por posição (/).
     Retorna o saldo e extrato atualizados.
     """
-    separador("💰 DEPÓSITO")
-    print(f"  Cliente: {nome}")
-    try:
-        valor = float(input("  Informe o valor do depósito: R$ "))
-    except ValueError:
-        print("\n  ❌ Valor inválido! Digite um número.")
-        return saldo, extrato
-
     if valor <= 0:
         print("\n  ❌ O valor do depósito deve ser maior que zero.")
         return saldo, extrato
@@ -76,25 +55,14 @@ def depositar(nome, saldo, extrato):
     return saldo, extrato
 
 
-def sacar(nome, saldo, extrato, numero_saques, limite, LIMITE_SAQUES):
+def sacar(*, saldo, valor, extrato, limite, numero_saques, limite_saques):
     """
-    Recebe nome e dados da conta.
-    Valida 3 regras e processa o saque.
+    Recebe argumentos apenas por nome (*).
     Retorna saldo, extrato e número de saques atualizados.
     """
-    separador("💸 SAQUE")
-    # ✅ CORREÇÃO: o nome já chegou como parâmetro — só exibimos, não pedimos de novo!
-    print(f"  Cliente: {nome}")
-    try:
-        valor = float(input("  Informe o valor do saque: R$ "))
-    except ValueError:
-        print("\n  ❌ Valor inválido! Digite um número.")
-        return saldo, extrato, numero_saques
-
-    # ── Validações ───────────────────────
     excedeu_saldo  = valor > saldo
     excedeu_limite = valor > limite
-    excedeu_saques = numero_saques >= LIMITE_SAQUES
+    excedeu_saques = numero_saques >= limite_saques
 
     if valor <= 0:
         print("\n  ❌ O valor do saque deve ser maior que zero.")
@@ -103,25 +71,24 @@ def sacar(nome, saldo, extrato, numero_saques, limite, LIMITE_SAQUES):
     elif excedeu_limite:
         print(f"\n  ❌ Limite por saque é R$ {limite:.2f}. Tente um valor menor.")
     elif excedeu_saques:
-        print(f"\n  ❌ Limite de {LIMITE_SAQUES} saques diários atingido.")
+        print(f"\n  ❌ Limite de {limite_saques} saques diários atingido.")
     else:
-        # ── Operação aprovada! ────────────
         saldo -= valor
         numero_saques += 1
         extrato += f"  💸 Saque:      R$ {valor:>10.2f}\n"
         print(f"\n  ✅ Saque de R$ {valor:.2f} realizado com sucesso!")
         print(f"  💳 Saldo atual: R$ {saldo:.2f}")
-        print(f"  📊 Saques hoje: {numero_saques}/{LIMITE_SAQUES}")
+        print(f"  📊 Saques hoje: {numero_saques}/{limite_saques}")
 
     return saldo, extrato, numero_saques
 
 
-def ver_extrato(nome, saldo, extrato):
+def ver_extrato(saldo, /, *, extrato):
     """
     Exibe o histórico de movimentações e o saldo atual.
+    Recebe saldo por posição (/) e extrato por nome (*).
     """
     separador("📄 EXTRATO")
-    print(f"  Cliente: {nome}")
     if not extrato:
         print("\n  ℹ️  Nenhuma movimentação realizada ainda.")
     else:
@@ -131,36 +98,125 @@ def ver_extrato(nome, saldo, extrato):
     print(f"  💳 Saldo atual: R$ {saldo:.2f}")
 
 
+def criar_usuario(usuarios):
+    separador("👤 NOVO USUÁRIO")
+    cpf = input("  Informe o CPF (somente números): ")
+    
+    usuario = filtrar_usuario(cpf, usuarios)
+    if usuario:
+        print("\n  ❌ Já existe um usuário com esse CPF!")
+        return
+
+    nome = input("  Informe o nome completo: ")
+    data_nascimento = input("  Informe a data de nascimento (dd-mm-aaaa): ")
+    endereco = input("  Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+
+    usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+    print("\n  ✅ Usuário criado com sucesso!")
+
+
+def filtrar_usuario(cpf, usuarios):
+    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+    return usuarios_filtrados[0] if usuarios_filtrados else None
+
+
+def criar_conta(agencia, numero_conta, usuarios):
+    separador("🏦 NOVA CONTA")
+    cpf = input("  Informe o CPF do usuário: ")
+    usuario = filtrar_usuario(cpf, usuarios)
+
+    if usuario:
+        print(f"\n  ✅ Conta criada com sucesso para {usuario['nome']}!")
+        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
+
+    print("\n  ❌ Usuário não encontrado! Fluxo de criação de conta encerrado.")
+    return None
+
+
+def listar_contas(contas):
+    separador("📋 LISTA DE CONTAS")
+    if not contas:
+        print("  ℹ️  Nenhuma conta cadastrada.")
+        return
+        
+    for conta in contas:
+        linha = f"""
+  Agência: {conta['agencia']}
+  C/C:     {conta['numero_conta']}
+  Titular: {conta['usuario']['nome']}"""
+        print(linha)
+        print("  " + "-" * 30)
+
+
 # ─────────────────────────────────────────
-#  PASSO 4: Loop principal do programa
-#  (o "coração" que mantém tudo rodando)
+#  Loop principal do programa
 # ─────────────────────────────────────────
 
-cabecalho()
-# ✅ Pedimos o nome UMA ÚNICA VEZ, antes do loop começar
-nome = input("  👤 Digite seu nome: ").strip()
-print(f"\n  Olá, {nome}! Seja bem-vindo(a) ao Banco DGBANK. 🎉")
+def main():
+    AGENCIA = "0001"
+    LIMITE_SAQUES = 3
+    
+    saldo = 0
+    limite = 500
+    extrato = ""
+    numero_saques = 0
+    usuarios = []
+    contas = []
 
-while True:
-    opcao = exibir_menu()
+    cabecalho()
+    
+    while True:
+        opcao = exibir_menu()
 
-    if opcao == "d":
-        saldo, extrato = depositar(nome, saldo, extrato)
+        if opcao == "d":
+            separador("💰 DEPÓSITO")
+            try:
+                valor = float(input("  Informe o valor do depósito: R$ "))
+                # A função depositar recebe argumentos apenas por posição
+                saldo, extrato = depositar(saldo, valor, extrato)
+            except ValueError:
+                print("\n  ❌ Valor inválido! Digite um número.")
 
-    elif opcao == "s":
-        saldo, extrato, numero_saques = sacar(
-            nome, saldo, extrato, numero_saques, limite, LIMITE_SAQUES
-        )
+        elif opcao == "s":
+            separador("💸 SAQUE")
+            try:
+                valor = float(input("  Informe o valor do saque: R$ "))
+                # A função sacar recebe argumentos apenas por nome
+                saldo, extrato, numero_saques = sacar(
+                    saldo=saldo,
+                    valor=valor,
+                    extrato=extrato,
+                    limite=limite,
+                    numero_saques=numero_saques,
+                    limite_saques=LIMITE_SAQUES,
+                )
+            except ValueError:
+                print("\n  ❌ Valor inválido! Digite um número.")
 
-    elif opcao == "e":
-        ver_extrato(nome, saldo, extrato)
+        elif opcao == "e":
+            # A função ver_extrato recebe saldo por posição e extrato por nome
+            ver_extrato(saldo, extrato=extrato)
 
-    elif opcao == "q":
-        separador()
-        # ✅ Mensagem de saída personalizada com o nome do cliente
-        print(f"  👋 Até logo, {nome}! Obrigado por usar o Banco DGBANK!")
-        separador()
-        break
+        elif opcao == "u":
+            criar_usuario(usuarios)
+            
+        elif opcao == "c":
+            numero_conta = len(contas) + 1
+            conta = criar_conta(AGENCIA, numero_conta, usuarios)
+            if conta:
+                contas.append(conta)
+                
+        elif opcao == "l":
+            listar_contas(contas)
 
-    else:
-        print("\n  ⚠️  Opção inválida. Tente novamente.")
+        elif opcao == "q":
+            separador()
+            print("  👋 Até logo! Obrigado por usar o Banco DGBANK!")
+            separador()
+            break
+
+        else:
+            print("\n  ⚠️  Opção inválida. Tente novamente.")
+
+if __name__ == "__main__":
+    main()
