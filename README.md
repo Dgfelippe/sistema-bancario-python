@@ -1,40 +1,95 @@
-# 🏦 Sistema Bancário DGBANK (v2) — Desafio Python DIO
+# 🏦 Sistema Bancário DGBANK (v3 POO) — Desafio Python DIO
 
-Projeto desenvolvido como parte da **Trilha de Python** da [Digital Innovation One (DIO)](https://www.dio.me/).
+Projeto desenvolvido como parte da **Trilha de Python AI Backend Developer** da [Digital Innovation One (DIO)](https://www.dio.me/).
 
 ## 📋 Sobre o Projeto
 
-Sistema bancário de terminal que simula operações de uma conta corrente. Na **Versão 2 (v2)**, o sistema foi refatorado para utilizar **Funções** (modularizando o código) e agora suporta o cadastro de múltiplos **Usuários (Clientes)** e a criação de múltiplas **Contas Correntes**.
+Sistema bancário de terminal que simula operações reais de contas bancárias e clientes. Na **Versão 3 (v3)**, o sistema foi totalmente remodelado e refatorado de dicionários e funções soltas para o **Paradigma de Programação Orientada a Objetos (POO)**, seguindo fielmente o **Diagrama de Classes UML** oficial do desafio da DIO.
+
+---
+
+## 📐 Modelagem de Classes UML
+
+```mermaid
+classDiagram
+    class Transacao {
+        <<interface>>
+        +valor : float
+        +registrar(conta: Conta)*
+    }
+
+    class Deposito {
+        -valor : float
+        +registrar(conta: Conta)
+    }
+
+    class Saque {
+        -valor : float
+        +registrar(conta: Conta)
+    }
+
+    class Historico {
+        -transacoes : list
+        +adicionar_transacao(transacao: Transacao)
+    }
+
+    class Conta {
+        -saldo : float
+        -numero : int
+        -agencia : str
+        -cliente : Cliente
+        -historico : Historico
+        +nova_conta(cliente: Cliente, numero: int)$ Conta
+        +sacar(valor: float) bool
+        +depositar(valor: float) bool
+    }
+
+    class ContaCorrente {
+        -limite : float
+        -limite_saques : int
+        +sacar(valor: float) bool
+    }
+
+    class Cliente {
+        -endereco : str
+        -contas : list
+        +realizar_transacao(conta: Conta, transacao: Transacao)
+        +adicionar_conta(conta: Conta)
+    }
+
+    class PessoaFisica {
+        -cpf : str
+        -nome : str
+        -data_nascimento : str
+    }
+
+    Transacao <|.. Deposito : implements
+    Transacao <|.. Saque : implements
+    Conta <|-- ContaCorrente : extends
+    Cliente <|-- PessoaFisica : extends
+    Cliente "1" o-- "*" Conta : possui
+    Conta "1" *-- "1" Historico : possui
+    Historico o-- "*" Transacao : registra
+```
+
+---
 
 ## ⚙️ Funcionalidades
 
 | Operação | Descrição |
 |---|---|
-| 💰 **Depósito** | Adiciona valor ao saldo com validação |
-| 💸 **Saque** | Realiza saques com regras de limite e quantidade |
-| 📄 **Extrato** | Exibe o histórico completo de movimentações |
-| 👤 **Criar Usuário** | Cadastra novos clientes vinculados ao seu CPF |
-| 🏦 **Criar Conta** | Cria contas correntes associadas a um usuário cadastrado |
-| 📋 **Listar Contas** | Lista todas as contas criadas e seus respectivos donos |
+| 💰 **Depósito** | Registra objeto de `Deposito` por meio do cliente na conta |
+| 💸 **Saque** | Valida regras de limite por saque (R$ 500,00) e saques diários (3 saques) |
+| 📄 **Extrato** | Exibe histórico detalhado formatado com data/hora e saldo |
+| 👤 **Novo Usuário/Cliente** | Instancia objeto `PessoaFisica` com CPF validado |
+| 🏦 **Nova Conta Corrente** | Cria instância `ContaCorrente` associada ao cliente titular |
+| 📋 **Listar Contas** | Lista contas formatadas usando o método `__str__` |
 
-### Regras de Negócio e Validações
-
-**Operações Bancárias:**
-- ✅ Só aceita depósitos com valor positivo.
-- ✅ Limite máximo de **R$ 500,00** por saque.
-- ✅ Máximo de **3 saques** por dia.
-- ✅ Impede saque quando o saldo é insuficiente.
-
-**Usuários e Contas:**
-- ✅ Um usuário é composto por nome, CPF, data de nascimento e endereço completo.
-- ✅ **Não é permitido** cadastrar mais de um usuário com o mesmo CPF.
-- ✅ As contas pertencem a um usuário e possuem numeração sequencial iniciando em 1.
-- ✅ O número da agência é sempre fixo ("0001").
-- ✅ Um usuário pode ter várias contas correntes, mas uma conta tem apenas um dono.
+---
 
 ## 🚀 Como Executar
 
-**Pré-requisito:** Python 3.x instalado
+**Pré-requisito:** Python 3.10+ instalado.
 
 ```bash
 # Clone o repositório
@@ -47,37 +102,41 @@ cd sistema-bancario-python
 python banco.py
 ```
 
-## 🖥️ Demonstração
+---
+
+## 🖥️ Demonstração do Menu
 
 ```text
-════════════════════════════════════════════
-║       🏦  BANCO DGBANK — Bem-vindo(a)!   ║
-════════════════════════════════════════════
-
-──────────  ──────────
+══════════════════════════════════════════════
+║   🏦  BANCO DGBANK (POO) — Bem-vindo(a)!   ║
+══════════════════════════════════════════════
+──────────────────────────────────────────────
   [d] 💰  Depositar
   [s] 💸  Sacar
   [e] 📄  Ver Extrato
-  [u] 👤  Novo Usuário
-  [c] 🏦  Nova Conta
+  [u] 👤  Novo Usuário / Cliente
+  [c] 🏦  Nova Conta Corrente
   [l] 📋  Listar Contas
   [q] 🚪  Sair
-──────────  ──────────
-  👉 Escolha uma opção: 
+──────────────────────────────────────────────
+  👉 Escolha uma opção:
 ```
-
-## 📚 Conceitos Avançados Aplicados (v2)
-
-- Funções com múltiplos retornos
-- Argumentos Posicionais (`/`) e Nomeados (`*`) em Funções Python
-- Utilização de Listas (`list`) e Dicionários (`dict`)
-- Lógica de filtros em listas (`list comprehension`)
-- Organização de código em métodos para maior legibilidade
-
-## 👤 Autor
-
-Feito com 💙 durante a Trilha Python AI Backend Developer da DIO.
 
 ---
 
-> **Digital Innovation One** | Trilha Python | Desafio: Otimizando o Sistema Bancário com Funções Python
+## 📚 Conceitos de POO Aplicados
+
+- **Abstração:** Interfaces e classes abstratas utilizando o módulo `abc` (`ABC` e `@abstractmethod`).
+- **Encapsulamento:** Atributos protegidos com convenção `_` e expostos através de `@property`.
+- **Herança:** `ContaCorrente` herda de `Conta`, e `PessoaFisica` herda de `Cliente`.
+- **Polimorfismo:** Método `sacar` sobrescrito na classe `ContaCorrente` invocando `super().sacar(valor)`.
+- **Métodos Especiais e de Classe:** Uso de `@classmethod` (`nova_conta`) e sobrescrita de `__str__`.
+
+---
+
+## 👤 Autor
+
+Desenvolvido por **Diogo Felippe**  
+GitHub: [@Dgfelippe](https://github.com/Dgfelippe)
+
+Feito com 💙 durante o desafio **Modelando o Sistema Bancário em POO com Python** da DIO.
