@@ -12,6 +12,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime, date
 import re
 
+from auditoria import log_transacao
+
 
 # ─────────────────────────────────────────────────────────────────────────
 #  UTILITÁRIOS & VALIDAÇÕES DO MUNDO REAL
@@ -80,6 +82,7 @@ class Deposito(Transacao):
     def valor(self) -> float:
         return self._valor
 
+    @log_transacao
     def registrar(self, conta: "Conta") -> bool:
         sucesso = conta.depositar(self.valor)
         if sucesso:
@@ -95,6 +98,7 @@ class Saque(Transacao):
     def valor(self) -> float:
         return self._valor
 
+    @log_transacao
     def registrar(self, conta: "Conta") -> bool:
         sucesso = conta.sacar(self.valor)
         if sucesso:
@@ -115,6 +119,7 @@ class TransferenciaPix(Transacao):
     def conta_destino(self) -> "Conta":
         return self._conta_destino
 
+    @log_transacao
     def registrar(self, conta: "Conta") -> bool:
         if conta == self._conta_destino:
             print("\n  ❌ Operação cancelada! Não é possível fazer PIX para a mesma conta.")
@@ -224,6 +229,7 @@ class CartaoCredito:
     def valor_fatura(self) -> float:
         return self._limite_utilizado
 
+    @log_transacao
     def realizar_compra(self, descricao: str, valor: float) -> bool:
         if valor <= 0:
             print("\n  ❌ O valor da compra deve ser positivo.")
@@ -240,6 +246,7 @@ class CartaoCredito:
         print(f"  💳 Limite disponível restante: R$ {self.limite_disponivel:.2f}")
         return True
 
+    @log_transacao
     def pagar_fatura(self, conta: "Conta", valor: float) -> bool:
         if valor <= 0:
             print("\n  ❌ Valor de pagamento inválido.")

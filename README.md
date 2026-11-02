@@ -160,3 +160,28 @@ Desenvolvido por **Diogo Felippe**
 GitHub: [@Dgfelippe](https://github.com/Dgfelippe)
 
 Feito com 💙 para o desafio **Modelando o Sistema Bancário em POO com Python** da DIO.
+
+
+## Registro de operações em arquivo
+
+O módulo `auditoria.py` fornece o decorador `@log_transacao`, aplicado em
+`banco.py` a `Deposito.registrar`, `Saque.registrar`,
+`TransferenciaPix.registrar`, `CartaoCredito.realizar_compra` e
+`CartaoCredito.pagar_fatura`.
+
+Cada chamada registra data e hora locais com fuso horário, nome da função,
+argumentos posicionais (`args`), argumentos nomeados (`kwargs`) e retorno.
+Chamadas que lançam exceção registram o erro e propagam a exceção original,
+se a gravação do log for bem-sucedida.
+
+O arquivo `log.txt` fica na pasta do projeto, independentemente da pasta de
+onde o programa foi iniciado. Ele é criado na primeira chamada registrada,
+em UTF-8, no modo de acréscimo (`a`), sem apagar entradas anteriores.
+Cada chamada ocupa uma linha; quebras de linha nos valores são escapadas.
+Objetos usam sua representação Python (`repr`), que pode incluir endereços
+na memória, em vez de todos os seus atributos.
+
+Execute com `python banco.py` ou abra `iniciar_banco.bat`. Não é necessário
+instalar bibliotecas externas. O arquivo de log é ignorado pelo Git.
+O histórico de contas e clientes continua em memória e não é restaurado
+pelo arquivo de log ao reiniciar o programa.
